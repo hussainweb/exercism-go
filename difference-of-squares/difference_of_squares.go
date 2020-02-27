@@ -1,11 +1,9 @@
 package diffsquares
 
-import "math"
-
 // SquareOfSum returns square of sum of first n integers
 func SquareOfSum(n int) int {
-	f := float64(n * (n + 1) / 2)
-	return int(math.Pow(f, 2))
+	f := n * (n + 1) / 2
+	return f * f
 }
 
 // SumOfSquares returns the sum of squares of first n integers
