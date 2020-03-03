@@ -42,6 +42,7 @@ func getProduct(digits string) (prod int64, err error) {
 	for _, d := range digits {
 		if !unicode.IsNumber(d) {
 			err = errors.New("not a number")
+			return
 		}
 		prod *= int64(d) - 48
 	}
