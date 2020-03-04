@@ -2,39 +2,22 @@ package isbn
 
 import (
 	"errors"
-	"strings"
 	"unicode"
 )
 
 // IsValidISBN checks if the isbn is valid
 func IsValidISBN(isbn string) bool {
-	isbnString, err := normalizeISBN(isbn)
+	checksum, err := getIsbnChecksum(isbn)
 	if err != nil {
 		return false
-	}
-
-	// Running the loop through the string twice has no significant
-	// impact on the performance. On my machine, it was only
-	// 3% slower which is trivial.
-	checksum := 0
-	for i, l := range isbnString {
-		d := 0
-		switch {
-		case l == 'X':
-			d = 10
-		default:
-			d = int(l) - 48
-		}
-
-		checksum += (10 - i) * d
 	}
 
 	return checksum%11 == 0
 }
 
-func normalizeISBN(isbn string) (string, error) {
-	var sb strings.Builder
+func getIsbnChecksum(isbn string) (int, error) {
 	digit := 0
+	checksum := 0
 	for _, l := range isbn {
 		if l == '-' {
 			continue
@@ -43,15 +26,24 @@ func normalizeISBN(isbn string) (string, error) {
 		// ISBN may only contain numbers, except 'X' at the
 		// 10th position
 		if !unicode.IsNumber(l) && (l != 'X' || digit != 9) {
-			return "", errors.New("invalid ISBN")
+			return 0, errors.New("invalid ISBN")
 		}
+
+		d := 0
+		switch {
+		case l == 'X':
+			d = 10
+		default:
+			d = int(l) - 48
+		}
+
+		checksum += (10 - digit) * d
 		digit++
-		sb.WriteRune(l)
 	}
 
-	if sb.Len() != 10 {
-		return "", errors.New("invalid ISBN")
+	if digit != 10 {
+		return 0, errors.New("invalid ISBN")
 	}
 
-	return sb.String(), nil
+	return checksum, nil
 }
