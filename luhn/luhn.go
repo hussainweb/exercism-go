@@ -33,7 +33,7 @@ func Valid(sequence string) bool {
 		}
 
 		// Convert the number in the character to an integer.
-		digit := int(l & 0xF)
+		digit := int(l - '0')
 		if i%2 == modulus {
 			digit *= 2
 			if digit >= 10 {
