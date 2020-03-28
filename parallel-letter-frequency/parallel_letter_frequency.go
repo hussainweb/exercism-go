@@ -5,6 +5,11 @@ import "sync"
 // FreqMap records the frequency of each rune in a given text.
 type FreqMap map[rune]int
 
+type runeCount struct {
+	r rune
+	c int
+}
+
 // Frequency counts the frequency of each rune in a given text and returns this
 // data as a FreqMap.
 func Frequency(s string) FreqMap {
@@ -17,35 +22,41 @@ func Frequency(s string) FreqMap {
 
 // ConcurrentFrequency counts the frequency of each rune in parallel.
 func ConcurrentFrequency(strings []string) FreqMap {
-	var wg sync.WaitGroup
-	sc := safeCounter{}
-	sc.v = make(FreqMap)
+	var runeCounterChan = make([]chan runeCount, len(strings))
 
-	for _, s := range strings {
-		wg.Add(1)
-		go func(str string) {
+	for i, s := range strings {
+		runeCounterChan[i] = make(chan runeCount, 25)
+		go func(str string, runeCounterChan chan runeCount) {
 			smap := Frequency(str)
 			for r, c := range smap {
-				sc.Add(r, c)
+				runeCounterChan <- runeCount{r: r, c: c}
 			}
-			defer wg.Done()
-		}(s)
+			close(runeCounterChan)
+		}(s, runeCounterChan[i])
 	}
 
-	wg.Wait()
+	var wg sync.WaitGroup
+	var merged = make(chan runeCount, 100)
+	for i := range strings {
+		wg.Add(1)
+		go func(i int) {
+			for rc := range runeCounterChan[i] {
+				merged <- rc
+			}
+			defer wg.Done()
+		}(i)
+	}
 
-	return sc.v
-}
+	go func() {
+		wg.Wait()
+		close(merged)
+	}()
 
-type safeCounter struct {
-	v   FreqMap
-	mux sync.Mutex
-}
+	fm := FreqMap{}
+	for rc := range merged {
+		// Process each value
+		fm[rc.r] += rc.c
+	}
 
-// Add increases the value for the counter for the given key.
-func (c *safeCounter) Add(key rune, count int) {
-	c.mux.Lock()
-	// Lock so only one goroutine at a time can access the map c.v.
-	c.v[key] += count
-	c.mux.Unlock()
+	return fm
 }
