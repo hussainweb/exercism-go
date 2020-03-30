@@ -22,6 +22,10 @@ func Classify(number int64) (classification Classification, err error) {
 		err = ErrOnlyPositive
 		return
 	}
+	if number == 1 {
+		classification = ClassificationDeficient
+		return
+	}
 
 	aliquotSum := aliquotSum(number)
 	switch {
@@ -37,11 +41,17 @@ func Classify(number int64) (classification Classification, err error) {
 }
 
 func aliquotSum(number int64) int64 {
-	sum := int64(0)
+	sum := int64(1)
 
-	for i := int64(1); i < number/2+1; i++ {
+	for i := int64(2); i*i <= number; i++ {
 		if number%i == 0 {
 			sum += i
+			if number != i*i {
+				// Add the second factor as well, unless it's
+				// a proper square, which means the factor is already
+				// added.
+				sum += number / i
+			}
 		}
 	}
 
