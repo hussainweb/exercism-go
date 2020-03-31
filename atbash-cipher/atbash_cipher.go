@@ -14,16 +14,9 @@ func Atbash(str string) string {
 		}
 
 		if unicode.IsLetter(c) {
-			c = unicode.ToLower(c)
-			// Transpose the characters by adding or subtracting from the
-			// mid-point of the alphabet set. The mid-point can be either
-			// 'm' (109) or 'n' (110). We have to add/subtract twice the
-			// distance from the mid-point and normalize by subtracting 1.
-			if c <= 109 {
-				c += 2*(110-c) - 1
-			} else {
-				c -= 2*(c-109) - 1
-			}
+			// Transpose the letter to its opposite one.
+			// e.g. 'a' becomes 'z', 'm' becomes 'n', and so on.
+			c = 'z' - unicode.ToLower(c) + 'a'
 		}
 
 		// Write a blank space at every 5th position in
