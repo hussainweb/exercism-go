@@ -28,22 +28,12 @@ func Build(records []Record) (*Node, error) {
 	})
 
 	nodes := make(map[int]*Node)
-	largestID := -1
-	for _, r := range records {
-		if _, ok := nodes[r.ID]; ok {
-			return nil, errors.New("Duplicate record")
-		}
-		if r.ID == 0 && r.Parent != 0 {
-			return nil, errors.New("Invalid root")
-		}
-		if r.ID != 0 && r.Parent >= r.ID {
-			return nil, errors.New("Parent cannot be larger than or same as ID")
+	for i, r := range records {
+		if r.ID != i || r.Parent > r.ID || r.ID > 0 && r.Parent == r.ID {
+			return nil, errors.New("not in sequence or has bad parent")
 		}
 
 		nodes[r.ID] = &Node{ID: r.ID}
-		if r.ID > largestID {
-			largestID = r.ID
-		}
 
 		if r.ID != 0 {
 			parentNode, parentFound := nodes[r.Parent]
@@ -54,45 +44,5 @@ func Build(records []Record) (*Node, error) {
 		}
 	}
 
-	if _, ok := nodes[0]; !ok {
-		return nil, errors.New("No root node")
-	}
-
-	if largestID+1 != len(nodes) {
-		return nil, errors.New("The IDs are not sequential")
-	}
-
 	return nodes[0], nil
-}
-
-func validateRecords(records []Record) error {
-	nodes := make(map[int]Node)
-	largestID := -1
-	for _, r := range records {
-		if _, ok := nodes[r.ID]; ok {
-			return errors.New("Duplicate record")
-		}
-		if r.ID == 0 && r.Parent != 0 {
-			return errors.New("Invalid root")
-		}
-		if r.ID != 0 && r.Parent >= r.ID {
-			return errors.New("Parent cannot be larger than or same as ID")
-		}
-
-		nodes[r.ID] = Node{ID: r.ID}
-		if r.ID > largestID {
-			largestID = r.ID
-		}
-	}
-
-	if _, ok := nodes[0]; !ok {
-		return errors.New("No root node")
-	}
-
-	if largestID+1 != len(nodes) {
-		return errors.New("The IDs are not sequential")
-	}
-
-	// All good, no errors
-	return nil
 }
