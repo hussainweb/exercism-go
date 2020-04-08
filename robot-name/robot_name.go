@@ -1,6 +1,7 @@
 package robotname
 
 import (
+	"errors"
 	"math/rand"
 	"time"
 )
@@ -10,6 +11,8 @@ type Robot struct {
 	name string
 }
 
+const maxAttempts = 10000
+
 var generatedNames []string
 
 var randomGenerator = rand.New(rand.NewSource(time.Now().Unix()))
@@ -17,7 +20,11 @@ var randomGenerator = rand.New(rand.NewSource(time.Now().Unix()))
 // Name returns a robot's name
 func (r *Robot) Name() (string, error) {
 	if r.name == "" {
-		r.name = generateName()
+		name, err := generateName()
+		if err != nil {
+			return "", err
+		}
+		r.name = name
 	}
 	return r.name, nil
 }
@@ -36,14 +43,13 @@ func isNameGiven(name string) bool {
 	return false
 }
 
-func generateName() string {
-	name := ""
-	for {
-		name = string(randomGenerator.Intn(26)+65) + string(randomGenerator.Intn(26)+65) + string(randomGenerator.Intn(9)+48) + string(randomGenerator.Intn(9)+48) + string(randomGenerator.Intn(9)+48)
+func generateName() (string, error) {
+	for i := 0; i < maxAttempts; i++ {
+		name := string(randomGenerator.Intn(26)+65) + string(randomGenerator.Intn(26)+65) + string(randomGenerator.Intn(9)+48) + string(randomGenerator.Intn(9)+48) + string(randomGenerator.Intn(9)+48)
 		if !isNameGiven(name) {
-			break
+			generatedNames = append(generatedNames, name)
+			return name, nil
 		}
 	}
-	generatedNames = append(generatedNames, name)
-	return name
+	return "", errors.New("Maximum names attempted")
 }
