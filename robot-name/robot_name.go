@@ -11,7 +11,7 @@ type Robot struct {
 	name string
 }
 
-const maxAttempts = 10000
+const maxAttempts = 26 * 26 * 10 * 10 * 10
 
 var generatedNames []string
 
