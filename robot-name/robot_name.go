@@ -11,8 +11,6 @@ type Robot struct {
 	name string
 }
 
-const maxAttempts = 26 * 26 * 10 * 10 * 10
-
 var generatedNames []string
 
 var randomGenerator = rand.New(rand.NewSource(time.Now().Unix()))
@@ -44,12 +42,15 @@ func isNameGiven(name string) bool {
 }
 
 func generateName() (string, error) {
-	for i := 0; i < maxAttempts; i++ {
+	if len(generatedNames) >= 26*26*10*10*10 {
+		return "", errors.New("Maximum names generated")
+	}
+
+	for {
 		name := string(randomGenerator.Intn(26)+65) + string(randomGenerator.Intn(26)+65) + string(randomGenerator.Intn(9)+48) + string(randomGenerator.Intn(9)+48) + string(randomGenerator.Intn(9)+48)
 		if !isNameGiven(name) {
 			generatedNames = append(generatedNames, name)
 			return name, nil
 		}
 	}
-	return "", errors.New("Maximum names attempted")
 }
