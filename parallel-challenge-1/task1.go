@@ -2,7 +2,6 @@ package training
 
 import (
 	"context"
-	"sync"
 )
 
 type result struct {
@@ -11,11 +10,6 @@ type result struct {
 }
 
 func RunParallel(ctx context.Context, tasks ...func() (bool, error)) (bool, error) {
-	// Tip: WaitGroup shouldn't be copied. It should only be passed as pointers.
-	// We could be passing it to the goroutines below as a pointer but they are available anyway.
-	wg := sync.WaitGroup{}
-	wg.Add(len(tasks))
-
 	ch := make(chan result)
 
 	for _, task := range tasks {
@@ -25,18 +19,13 @@ func RunParallel(ctx context.Context, tasks ...func() (bool, error)) (bool, erro
 				ok:  ok,
 				err: err,
 			}
-			wg.Done()
 		}(task)
 	}
 
-	go func() {
-		// Wait until all of the tasks are done and then close the channel.
-		// Do this in a go function so that we don't block the rest of the function.
-		wg.Wait()
-		close(ch)
-	}()
-
-	for res := range ch {
+	// Since we are looping over the tasks, we don't need a WaitGroup because this loop will end
+	// as long as all the tasks return.
+	for range tasks {
+		res := <-ch
 		if res.err != nil {
 			return false, res.err
 		}
