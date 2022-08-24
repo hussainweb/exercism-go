@@ -4,7 +4,7 @@ Some of our mentors thought it would be really cool to throw a little challenge 
 
 ## Task 1
 
-Execute the the given tasks in parallel and cancel all others if one returns with an error. If all returned boolean values are true, return true, otherwise false.
+Execute the given tasks in parallel and cancel all others if one returns with an error. If all returned boolean values are true, return true, otherwise false.
 
 ```go
 func RunParallel(ctx context.Context, tasks ...func() (bool, error)) (bool, error) {
