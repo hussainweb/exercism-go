@@ -9,12 +9,18 @@ type result struct {
 	err error
 }
 
-func RunParallel(ctx context.Context, tasks ...func() (bool, error)) (bool, error) {
+func RunParallel(ctx context.Context, tasks ...func(ctx context.Context) (bool, error)) (bool, error) {
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
 	ch := make(chan result)
 
 	for _, task := range tasks {
-		go func(task func() (bool, error)) {
-			ok, err := task()
+		go func(task func(ctx context.Context) (bool, error)) {
+			ok, err := task(ctx)
+			if err != nil {
+				cancel()
+			}
 			ch <- result{
 				ok:  ok,
 				err: err,
